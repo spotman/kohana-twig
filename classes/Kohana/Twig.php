@@ -54,6 +54,8 @@ class Kohana_Twig extends View {
 	 * Create a new Twig environment
 	 *
 	 * @return  Twig_Environment  Twig environment
+	 * @throws Kohana_Exception
+	 * @throws Twig_Exception
 	 */
 	protected static function env()
 	{
@@ -72,16 +74,34 @@ class Kohana_Twig extends View {
 			$filter = new Twig_SimpleFilter($key, $value);
 			$env->addFilter($filter);
 		}
-                
+
 		foreach ($config->get('tests') as $key => $value)
 		{
 		    $test = new Twig_SimpleTest($key, $value);
 		    $env->addTest($test);
 		}
 
-		foreach ($config->get('extensions') as $extension_class)
+		foreach ($config->get('extensions') as $extension)
 		{
-        	$extension = new $extension_class;
+			// Extension is a class name
+			if (is_string($extension))
+			{
+				$extension = new $extension;
+			}
+            // Extension is lambda
+            elseif (is_callable($extension))
+            {
+                $extension = call_user_func($extension);
+            }
+
+            if (!($extension instanceof Twig_ExtensionInterface))
+			{
+				throw new Twig_Exception('Extension must be instance of :must, but :real given', [
+					':must'	=>	Twig_ExtensionInterface::class,
+					':real'	=>	get_class($extension),
+				]);
+			}
+
 			$env->addExtension($extension);
 		}
 
