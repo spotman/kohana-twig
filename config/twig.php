@@ -26,6 +26,8 @@ return array(
             'layouts'   =>  'layouts',
             'templates' =>  'templates',
         ),
+
+        'prototype_namespace'   =>  'proto',
 	),
 
 	/**
@@ -37,7 +39,7 @@ return array(
 		'auto_reload'         => (Kohana::$environment == Kohana::DEVELOPMENT),
         'debug'               => (Kohana::$environment == Kohana::DEVELOPMENT),
         'autoescape'          => TRUE,
-		'base_template_class' => 'Twig_Template',
+		'base_template_class' => Twig_Template::class,
 		'cache'               => TWIGPATH.'cache',
 		'charset'             => 'utf-8',
 		'optimizations'       => -1,

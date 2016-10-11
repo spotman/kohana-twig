@@ -55,12 +55,11 @@ class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem {
      */
     protected function add_paths()
     {
-        $paths = array();
-
         $namespaces = $this->_config['namespaces'];
+        $prototype_ns = $this->_config['prototype_namespace'];
 
         // Iterate through Kohana include paths
-        foreach ( Kohana::include_paths() as $kohana_path )
+        foreach ( Kohana::include_paths() as $path_index => $kohana_path )
         {
             $base_path = $kohana_path.$this->_config['path'];
 
@@ -69,6 +68,12 @@ class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem {
                 continue;
 
             $this->addPath($base_path);
+
+            // Skip first path (application or site-related path)
+            if ($path_index) {
+                // Add @proto namespace for views in modules
+                $this->addPath($base_path, $prototype_ns);
+            }
 
             foreach ( $namespaces as $ns_name => $fs_alias )
             {
