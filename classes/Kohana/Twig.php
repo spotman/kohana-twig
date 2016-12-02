@@ -16,26 +16,12 @@ class Kohana_Twig extends View {
 	 * @param   string  $path Path to the cache directory
 	 * @return  boolean
 	 */
-	protected static function _init_cache($path)
+	protected function _init_cache($path)
 	{
 		if (mkdir($path, 0755, TRUE) AND chmod($path, 0755))
 			return TRUE;
 
 		return FALSE;
-	}
-
-	/**
-	 * Initialize the Twig module
-	 */
-	public static function init()
-	{
-		$path = Kohana::$config->load('twig.environment.cache');
-		if ($path !== FALSE AND ! is_writable($path) AND ! self::_init_cache($path))
-		{
-			throw new Kohana_Exception('Directory :dir must exist and be writable', array(
-				':dir' => Debug::path($path),
-			));
-		}
 	}
 
 	/**
@@ -57,11 +43,21 @@ class Kohana_Twig extends View {
 	 * @throws Kohana_Exception
 	 * @throws Twig_Exception
 	 */
-	protected static function env()
+	protected function env()
 	{
 		$config = Kohana::$config->load('twig');
+		$env_config = $config->get('environment');
+		$path = $env_config['cache'];
+
+        if ($path !== FALSE AND ! is_writable($path) AND ! $this->_init_cache($path))
+        {
+            throw new Kohana_Exception('Directory :dir must exist and be writable', array(
+                ':dir' => Debug::path($path),
+            ));
+        }
+
 		$loader = new Twig_Loader_CFS($config->get('loader'));
-		$env = new Twig_Environment($loader, $config->get('environment'));
+		$env = new Twig_Environment($loader, $env_config);
 
 		foreach ($config->get('functions') as $key => $value)
 		{
@@ -113,11 +109,11 @@ class Kohana_Twig extends View {
 	 *
 	 * @return  Twig_Environment  Twig environment
 	 */
-	protected static function environment()
+	protected function environment()
 	{
 		if (static::$_environment === NULL)
 		{
-			static::$_environment = static::env();
+			static::$_environment = $this->env();
 		}
 		return static::$_environment;
 	}
@@ -148,13 +144,15 @@ class Kohana_Twig extends View {
 			$this->set_filename($file);
 		}
 
+		$env = $this->environment();
+
 		// Bind global data to Twig environment.
 		foreach (static::$_global_data as $key => $value)
 		{
-			static::environment()->addGlobal($key, $value);
+			$env->addGlobal($key, $value);
 		}
 
-		return static::environment()->render($this->_file, $this->_data);
+		return $env->render($this->_file, $this->_data);
 	}
 
 } // End Twig
