@@ -3,31 +3,31 @@
 /**
  * Twig loader for Kohana's cascading filesystem
  */
-class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem {
+class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem
+{
 
     protected $_paths_cache_key = 'twig_cfs_loader_paths';
 
-	/**
-	 * Loader configuration
-	 */
-	protected $_config;
+    /**
+     * Loader configuration
+     */
+    protected $_config;
 
-	/**
-	 * Constructor
-	 *
-	 * @param  array  $config  Loader configuration
-	 */
-	public function __construct($config)
-	{
+    /**
+     * Constructor
+     *
+     * @param  array $config Loader configuration
+     */
+    public function __construct($config)
+    {
         // No paths by default
         parent::__construct();
 
-		$this->_config = $config;
+        $this->_config = $config;
 
         $this->paths = $this->path_cache($this->_paths_cache_key);
 
-        if ( ! $this->paths )
-        {
+        if (!$this->paths) {
             $this->add_paths();
             $this->path_cache($this->_paths_cache_key, $this->paths);
         }
@@ -37,13 +37,14 @@ class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem {
      * Getter/setter for caching view paths
      * If you are using another cache module, override this method in Twig_Loader_CFS
      *
-     * @param string $key
+     * @param string     $key
      * @param mixed|null $value
+     *
      * @return bool|null
      */
-    protected function path_cache($key, $value = NULL)
+    protected function path_cache($key, $value = null)
     {
-        return ( $value === NULL )
+        return ($value === null)
             ? Kohana::cache($key)
             : Kohana::cache($key, $value);
     }
@@ -55,17 +56,18 @@ class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem {
      */
     protected function add_paths()
     {
-        $namespaces = $this->_config['namespaces'];
+        /** @var string[] $namespaces */
+        $namespaces   = $this->_config['namespaces'];
         $prototype_ns = $this->_config['prototype_namespace'];
 
         // Iterate through Kohana include paths
-        foreach ( Kohana::include_paths() as $path_index => $kohana_path )
-        {
+        foreach (Kohana::include_paths() as $path_index => $kohana_path) {
             $base_path = $kohana_path.$this->_config['path'];
 
             // Ignore modules without Twig views
-            if ( ! file_exists($base_path) )
+            if (!file_exists($base_path)) {
                 continue;
+            }
 
             $this->addPath($base_path);
 
@@ -75,25 +77,33 @@ class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem {
                 $this->addPath($base_path, $prototype_ns);
             }
 
-            foreach ( $namespaces as $ns_name => $fs_alias )
-            {
+            foreach ($namespaces as $ns_name => $fs_alias) {
                 $ns_path = $base_path.DIRECTORY_SEPARATOR.$fs_alias;
 
                 // Ignore modules without Twig namespace directory
-                if ( ! file_exists($ns_path) )
+                if (!file_exists($ns_path)) {
                     continue;
+                }
 
                 $this->addPath($ns_path, $ns_name);
             }
         }
     }
 
-    protected function findTemplate($name)
+    /**
+     * Checks if the template can be found.
+     *
+     * @param string $name  The template name
+     * @param bool   $throw Whether to throw an exception when an error occurs
+     *
+     * @return string|false The template name or false
+     */
+    protected function findTemplate($name, $throw = true)
     {
         // Add extension to files
         $name .= '.'.$this->_config['extension'];
 
-        return parent::findTemplate($name);
+        return parent::findTemplate($name, $throw);
     }
 
 } // End CFS

@@ -3,156 +3,163 @@
 /**
  * Twig view
  */
-class Kohana_Twig extends View {
+class Kohana_Twig extends View
+{
 
-	/**
-	 * Twig environment
-	 */
-	protected static $_environment = NULL;
+    /**
+     * Twig environment
+     */
+    protected static $_environment;
 
-	/**
-	 * Initialize the cache directory
-	 *
-	 * @param   string  $path Path to the cache directory
-	 * @return  boolean
-	 */
-	protected function _init_cache($path)
-	{
-		if (mkdir($path, 0755, TRUE) AND chmod($path, 0755))
-			return TRUE;
+    /**
+     * Initialize the cache directory
+     *
+     * @param   string $path Path to the cache directory
+     *
+     * @return  boolean
+     */
+    protected function _init_cache($path)
+    {
+        if (mkdir($path, 0755, true) AND chmod($path, 0755))
+            return true;
 
-		return FALSE;
-	}
+        return false;
+    }
 
-	/**
-	 * Create a Twig view instance
-	 *
-	 * @param   string  $file  Name of Twig template
-	 * @param   array   $data  Data to be passed to template
-	 * @return  Twig    Twig view instance
-	 */
-	public static function factory($file = NULL, array $data = NULL)
-	{
-		return new Twig($file, $data);
-	}
+    /**
+     * Create a Twig view instance
+     *
+     * @param   string $file Name of Twig template
+     * @param   array  $data Data to be passed to template
+     *
+     * @return  Twig    Twig view instance
+     */
+    public static function factory($file = null, array $data = null)
+    {
+        return new Twig($file, $data);
+    }
 
-	/**
-	 * Create a new Twig environment
-	 *
-	 * @return  Twig_Environment  Twig environment
-	 * @throws Kohana_Exception
-	 * @throws Twig_Exception
-	 */
-	protected function env()
-	{
-		$config = Kohana::$config->load('twig');
-		$env_config = $config->get('environment');
-		$path = $env_config['cache'];
+    /**
+     * Create a new Twig environment
+     *
+     * @return  Twig_Environment  Twig environment
+     * @throws Kohana_Exception
+     * @throws Twig_Exception
+     */
+    protected function env()
+    {
+        $config     = Kohana::$config->load('twig');
+        $env_config = $config->get('environment');
+        $path       = $env_config['cache'];
 
-        if ($path !== FALSE AND ! is_writable($path) AND ! $this->_init_cache($path))
-        {
-            throw new Kohana_Exception('Directory :dir must exist and be writable', array(
+        if ($path !== false && !is_writable($path) && !$this->_init_cache($path)) {
+            throw new Kohana_Exception('Directory :dir must exist and be writable', [
                 ':dir' => Debug::path($path),
-            ));
+            ]);
         }
 
-		$loader = new Twig_Loader_CFS($config->get('loader'));
-		$env = new Twig_Environment($loader, $env_config);
+        $loader = new Twig_Loader_CFS($config->get('loader'));
+        $env    = new Twig_Environment($loader, $env_config);
 
-		foreach ($config->get('functions') as $key => $value)
-		{
-			$function = new Twig_SimpleFunction($key, $value);
-			$env->addFunction($function);
-		}
+        /** @var string[] $functions */
+        $functions = $config->get('functions');
 
-		foreach ($config->get('filters') as $key => $value)
-		{
-			$filter = new Twig_SimpleFilter($key, $value);
-			$env->addFilter($filter);
-		}
+        /** @var string[] $filters */
+        $filters = $config->get('filters');
 
-		foreach ($config->get('tests') as $key => $value)
-		{
-		    $test = new Twig_SimpleTest($key, $value);
-		    $env->addTest($test);
-		}
+        /** @var string[] $tests */
+        $tests = $config->get('tests');
 
-		foreach ($config->get('extensions') as $extension)
-		{
-			// Extension is a class name
-			if (is_string($extension))
-			{
-				$extension = new $extension;
-			}
-            // Extension is lambda
-            elseif (is_callable($extension))
-            {
+        /** @var string[] $extensions */
+        $extensions = $config->get('extensions');
+
+        foreach ($functions as $key => $value) {
+            $function = new Twig_SimpleFunction($key, $value);
+            $env->addFunction($function);
+        }
+
+        foreach ($filters as $key => $value) {
+            $filter = new Twig_SimpleFilter($key, $value);
+            $env->addFilter($filter);
+        }
+
+        foreach ($tests as $key => $value) {
+            $test = new Twig_SimpleTest($key, $value);
+            $env->addTest($test);
+        }
+
+        foreach ($extensions as $extension) {
+            // Extension is a class name
+            if (is_string($extension)) {
+                $extension = new $extension;
+            } // Extension is lambda
+            elseif (is_callable($extension)) {
                 $extension = call_user_func($extension);
             }
 
-            if (!($extension instanceof Twig_ExtensionInterface))
-			{
-				throw new Twig_Exception('Extension must be instance of :must, but :real given', [
-					':must'	=>	Twig_ExtensionInterface::class,
-					':real'	=>	get_class($extension),
-				]);
-			}
+            if (!($extension instanceof Twig_ExtensionInterface)) {
+                throw new Twig_Exception('Extension must be instance of :must, but :real given', [
+                    ':must' => Twig_ExtensionInterface::class,
+                    ':real' => get_class($extension),
+                ]);
+            }
 
-			$env->addExtension($extension);
-		}
+            $env->addExtension($extension);
+        }
 
-		return $env;
-	}
+        return $env;
+    }
 
-	/**
-	 * Get the Twig environment (or create it on first call)
-	 *
-	 * @return  Twig_Environment  Twig environment
-	 */
-	protected function environment()
-	{
-		if (static::$_environment === NULL)
-		{
-			static::$_environment = $this->env();
-		}
-		return static::$_environment;
-	}
+    /**
+     * Get the Twig environment (or create it on first call)
+     *
+     * @return  Twig_Environment  Twig environment
+     */
+    protected function environment()
+    {
+        if (static::$_environment === null) {
+            static::$_environment = $this->env();
+        }
 
-	/**
-	 * Set the filename for the Twig view
-	 *
-	 * @param   string  $file  Base name of template
-	 * @return  Twig    This Twig instance
-	 */
-	function set_filename($file)
-	{
-		$this->_file = $file;
-		return $this;
-	}
+        return static::$_environment;
+    }
+
+    /**
+     * Set the filename for the Twig view
+     *
+     * @param   string $file Base name of template
+     *
+     * @return  Twig    This Twig instance
+     */
+    public function set_filename($file)
+    {
+        $this->_file = $file;
+
+        return $this;
+    }
 
     /**
      * Render Twig template as string
      *
-     * @param   string  $file  Base name of template
+     * @param   string $file Base name of template
+     *
      * @return  string  Rendered Twig template
      * @throws View_Exception
      */
-    public function render($file = NULL)
-	{
-		if ($file !== NULL)
-		{
-			$this->set_filename($file);
-		}
+    public function render($file = null)
+    {
+        if ($file !== null) {
+            $this->set_filename($file);
+        }
 
-		$env = $this->environment();
+        $env = $this->environment();
 
-		// Bind global data to Twig environment.
-		foreach (static::$_global_data as $key => $value)
-		{
-			$env->addGlobal($key, $value);
-		}
+        // Bind global data to Twig environment.
+        foreach (static::$_global_data as $key => $value) {
+            $env->addGlobal($key, $value);
+        }
 
-		return $env->render($this->_file, $this->_data);
-	}
+        return $env->render($this->_file, $this->_data);
+    }
 
 } // End Twig
