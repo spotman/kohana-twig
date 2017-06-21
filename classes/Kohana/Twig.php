@@ -18,12 +18,13 @@ class Kohana_Twig extends View
      *
      * @return  boolean
      */
-    protected function _init_cache($path)
+    protected function _init_cache($path, $chmod)
     {
-        if (mkdir($path, 0755, true) AND chmod($path, 0755))
-            return true;
+        if (!@mkdir($path, $chmod, true) && !is_dir($path)) {
+            return false;
+        }
 
-        return false;
+        return chmod($path, $chmod);
     }
 
     /**
@@ -51,8 +52,9 @@ class Kohana_Twig extends View
         $config     = Kohana::$config->load('twig');
         $env_config = $config->get('environment');
         $path       = $env_config['cache'];
+        $chmod      = $env_config['chmod'];
 
-        if ($path !== false && !is_writable($path) && !$this->_init_cache($path)) {
+        if ($path !== false && !is_writable($path) && !$this->_init_cache($path, $chmod)) {
             throw new Kohana_Exception('Directory :dir must exist and be writable', [
                 ':dir' => Debug::path($path),
             ]);

@@ -41,6 +41,7 @@ return [
         'autoescape'          => true,
         'base_template_class' => Twig_Template::class,
         'cache'               => TWIGPATH.'cache',
+        'chmod'               => 0755,
         'charset'             => 'utf-8',
         'optimizations'       => -1,
         'strict_variables'    => false,
