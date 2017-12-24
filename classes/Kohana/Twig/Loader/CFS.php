@@ -60,8 +60,13 @@ class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem
         $namespaces   = $this->_config['namespaces'];
         $prototype_ns = $this->_config['prototype_namespace'];
 
+        $include_paths = Kohana::include_paths();
+
+        // Detect app path (it always placed first)
+        $app_path = $include_paths[0];
+
         // Iterate through Kohana include paths
-        foreach (Kohana::include_paths() as $path_index => $kohana_path) {
+        foreach ($include_paths as $path_index => $kohana_path) {
             $base_path = $kohana_path.$this->_config['path'];
 
             // Ignore modules without Twig views
@@ -71,8 +76,8 @@ class Kohana_Twig_Loader_CFS extends Twig_Loader_Filesystem
 
             $this->addPath($base_path);
 
-            // Skip first path (application or site-related path)
-            if ($path_index) {
+            // Skip application or site-related path
+            if (strpos($base_path, $app_path) === false) {
                 // Add @proto namespace for views in modules
                 $this->addPath($base_path, $prototype_ns);
             }
