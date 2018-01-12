@@ -1,3 +1,3 @@
 <?php defined('SYSPATH') OR die('No direct script access.');
 
-define('TWIGPATH', rtrim(dirname(__FILE__), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
+define('TWIGPATH', rtrim(__DIR__, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
